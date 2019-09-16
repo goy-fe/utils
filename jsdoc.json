@@ -1,0 +1,42 @@
+{
+  "tags": {
+    "allowUnknownTags": false,
+    "dictionaries": [
+      "jsdoc",
+      "closure"
+    ]
+  },
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "source": {
+    "include": [
+      "dist",
+      "./README.md"
+    ],
+    "includePattern": "goy-utils.cjs.js$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "opts": {
+    "template": "node_modules/docdash",
+    "encoding": "utf8",
+    "destination": "docs",
+    "recurse": true,
+    "verbose": true
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": true,
+    "default": {
+      "outputSourceFiles": true,
+      "useLongnameInNav": false,
+      "showInheritedInNav": true
+    }
+  },
+  "docdash": {
+    "sort": true,
+    "meta": {
+      "title": "Goy Utils"
+    }
+  }
+}

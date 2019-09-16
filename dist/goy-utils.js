@@ -684,31 +684,43 @@
 	  return _typeof(obj);
 	}
 
-	var env = {
-	  /**
-	   * IOS环境
-	   * @param ua UserAgent
-	   */
-	  isIOS: function isIOS() {
-	    var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.userAgent;
-	    return /iPad|iPhone|iPod/i.test(ua);
-	  },
-	  isWechat: function isWechat() {
-	    var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.userAgent;
-	    return /micromessenger\/([\d.]+)/i.test(ua) || ua.includes('MicroMessenger');
-	  },
-	  isAndroid: function isAndroid() {
-	    var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.userAgent;
-	    return /android/i.test(ua) || ua.includes('Adr');
-	  },
-	  isBrowser: function isBrowser() {
-	    return (typeof window === "undefined" ? "undefined" : _typeof(window)) === 'object' && (typeof document === "undefined" ? "undefined" : _typeof(document)) === 'object' && document.nodeType === 9;
-	  }
-	};
-	var isIOS = env.isIOS;
-	var isWechat = env.isWechat;
-	var isAndroid = env.isAndroid;
-	var isBrowser = env.isBrowser;
+	/**
+	 * 检测是否为 IOS 环境
+	 * @param {string} [ua] 用户代理
+	 * @returns {boolean} 检测结果
+	 */
+	function isIOS() {
+	  var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.userAgent;
+	  return /iPad|iPhone|iPod/i.test(ua);
+	}
+	/**
+	 * 检测是否为微信环境
+	 * @param {string} [ua] 用户代理
+	 * @returns {boolean} 检测结果
+	 */
+
+	function isWechat() {
+	  var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.userAgent;
+	  return /micromessenger\/([\d.]+)/i.test(ua) || ua.includes('MicroMessenger');
+	}
+	/**
+	 * 检测是否为安卓环境
+	 * @param {string} [ua] 用户代理
+	 * @returns {boolean} 检测结果
+	 */
+
+	function isAndroid() {
+	  var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.userAgent;
+	  return /android/i.test(ua) || ua.includes('Adr');
+	}
+	/**
+	 * 检测是否为浏览器环境
+	 * @returns {boolean} 检测结果
+	 */
+
+	function isBrowser() {
+	  return (typeof window === "undefined" ? "undefined" : _typeof(window)) === 'object' && (typeof document === "undefined" ? "undefined" : _typeof(document)) === 'object' && document.nodeType === 9;
+	}
 
 	var aFunction$1 = function (it) {
 	  if (typeof it != 'function') {
@@ -853,22 +865,958 @@
 	  }
 	});
 
-	var fn = {
-	  noop: function noop() {},
-	  loopFn: function loopFn(length, cb) {
-	    Array.apply(null, {
-	      length: length
-	    }).map(function (_, idx) {
-	      typeof cb === 'function' && cb(idx);
+	/**
+	 * 空函数
+	 */
+	function noop() {}
+	/**
+	 * @callback loopFnCallback
+	 * @param {number} idx 当前次数索引
+	 */
+
+	/**
+	 * 循环执行方法
+	 * @param {number} length 循环次数
+	 * @param {loopFnCallback} cb 回调函数
+	 */
+
+	function loopFn(length, cb) {
+	  Array.apply(null, {
+	    length: length
+	  }).map(function (_, idx) {
+	    typeof cb === 'function' && cb(idx);
+	  });
+	}
+
+	var createProperty = function (object, key, value) {
+	  var propertyKey = toPrimitive(key);
+	  if (propertyKey in object) objectDefineProperty.f(object, propertyKey, createPropertyDescriptor(0, value));
+	  else object[propertyKey] = value;
+	};
+
+	var IS_CONCAT_SPREADABLE = wellKnownSymbol('isConcatSpreadable');
+	var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF;
+	var MAXIMUM_ALLOWED_INDEX_EXCEEDED = 'Maximum allowed index exceeded';
+
+	var IS_CONCAT_SPREADABLE_SUPPORT = !fails(function () {
+	  var array = [];
+	  array[IS_CONCAT_SPREADABLE] = false;
+	  return array.concat()[0] !== array;
+	});
+
+	var SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('concat');
+
+	var isConcatSpreadable = function (O) {
+	  if (!isObject(O)) return false;
+	  var spreadable = O[IS_CONCAT_SPREADABLE];
+	  return spreadable !== undefined ? !!spreadable : isArray(O);
+	};
+
+	var FORCED = !IS_CONCAT_SPREADABLE_SUPPORT || !SPECIES_SUPPORT;
+
+	// `Array.prototype.concat` method
+	// https://tc39.github.io/ecma262/#sec-array.prototype.concat
+	// with adding support of @@isConcatSpreadable and @@species
+	_export({ target: 'Array', proto: true, forced: FORCED }, {
+	  concat: function concat(arg) { // eslint-disable-line no-unused-vars
+	    var O = toObject(this);
+	    var A = arraySpeciesCreate(O, 0);
+	    var n = 0;
+	    var i, k, length, len, E;
+	    for (i = -1, length = arguments.length; i < length; i++) {
+	      E = i === -1 ? O : arguments[i];
+	      if (isConcatSpreadable(E)) {
+	        len = toLength(E.length);
+	        if (n + len > MAX_SAFE_INTEGER) throw TypeError(MAXIMUM_ALLOWED_INDEX_EXCEEDED);
+	        for (k = 0; k < len; k++, n++) if (k in E) createProperty(A, n, E[k]);
+	      } else {
+	        if (n >= MAX_SAFE_INTEGER) throw TypeError(MAXIMUM_ALLOWED_INDEX_EXCEEDED);
+	        createProperty(A, n++, E);
+	      }
+	    }
+	    A.length = n;
+	    return A;
+	  }
+	});
+
+	var sloppyArrayMethod = function (METHOD_NAME, argument) {
+	  var method = [][METHOD_NAME];
+	  return !method || !fails(function () {
+	    // eslint-disable-next-line no-useless-call,no-throw-literal
+	    method.call(null, argument || function () { throw 1; }, 1);
+	  });
+	};
+
+	var nativeJoin = [].join;
+
+	var ES3_STRINGS = indexedObject != Object;
+	var SLOPPY_METHOD = sloppyArrayMethod('join', ',');
+
+	// `Array.prototype.join` method
+	// https://tc39.github.io/ecma262/#sec-array.prototype.join
+	_export({ target: 'Array', proto: true, forced: ES3_STRINGS || SLOPPY_METHOD }, {
+	  join: function join(separator) {
+	    return nativeJoin.call(toIndexedObject(this), separator === undefined ? ',' : separator);
+	  }
+	});
+
+	var SPECIES$2 = wellKnownSymbol('species');
+	var nativeSlice = [].slice;
+	var max$1 = Math.max;
+
+	// `Array.prototype.slice` method
+	// https://tc39.github.io/ecma262/#sec-array.prototype.slice
+	// fallback for not array-like ES3 strings and DOM objects
+	_export({ target: 'Array', proto: true, forced: !arrayMethodHasSpeciesSupport('slice') }, {
+	  slice: function slice(start, end) {
+	    var O = toIndexedObject(this);
+	    var length = toLength(O.length);
+	    var k = toAbsoluteIndex(start, length);
+	    var fin = toAbsoluteIndex(end === undefined ? length : end, length);
+	    // inline `ArraySpeciesCreate` for usage native `Array#slice` where it's possible
+	    var Constructor, result, n;
+	    if (isArray(O)) {
+	      Constructor = O.constructor;
+	      // cross-realm fallback
+	      if (typeof Constructor == 'function' && (Constructor === Array || isArray(Constructor.prototype))) {
+	        Constructor = undefined;
+	      } else if (isObject(Constructor)) {
+	        Constructor = Constructor[SPECIES$2];
+	        if (Constructor === null) Constructor = undefined;
+	      }
+	      if (Constructor === Array || Constructor === undefined) {
+	        return nativeSlice.call(O, k, fin);
+	      }
+	    }
+	    result = new (Constructor === undefined ? Array : Constructor)(max$1(fin - k, 0));
+	    for (n = 0; k < fin; k++, n++) if (k in O) createProperty(result, n, O[k]);
+	    result.length = n;
+	    return result;
+	  }
+	});
+
+	var aPossiblePrototype = function (it) {
+	  if (!isObject(it) && it !== null) {
+	    throw TypeError("Can't set " + String(it) + ' as a prototype');
+	  } return it;
+	};
+
+	// `Object.setPrototypeOf` method
+	// https://tc39.github.io/ecma262/#sec-object.setprototypeof
+	// Works with __proto__ only. Old v8 can't work with null proto objects.
+	/* eslint-disable no-proto */
+	var objectSetPrototypeOf = Object.setPrototypeOf || ('__proto__' in {} ? function () {
+	  var CORRECT_SETTER = false;
+	  var test = {};
+	  var setter;
+	  try {
+	    setter = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set;
+	    setter.call(test, []);
+	    CORRECT_SETTER = test instanceof Array;
+	  } catch (error) { /* empty */ }
+	  return function setPrototypeOf(O, proto) {
+	    anObject(O);
+	    aPossiblePrototype(proto);
+	    if (CORRECT_SETTER) setter.call(O, proto);
+	    else O.__proto__ = proto;
+	    return O;
+	  };
+	}() : undefined);
+
+	// makes subclassing work correct for wrapped built-ins
+	var inheritIfRequired = function ($this, dummy, Wrapper) {
+	  var NewTarget, NewTargetPrototype;
+	  if (
+	    // it can work only with native `setPrototypeOf`
+	    objectSetPrototypeOf &&
+	    // we haven't completely correct pre-ES6 way for getting `new.target`, so use this
+	    typeof (NewTarget = dummy.constructor) == 'function' &&
+	    NewTarget !== Wrapper &&
+	    isObject(NewTargetPrototype = NewTarget.prototype) &&
+	    NewTargetPrototype !== Wrapper.prototype
+	  ) objectSetPrototypeOf($this, NewTargetPrototype);
+	  return $this;
+	};
+
+	// a string of all valid unicode whitespaces
+	// eslint-disable-next-line max-len
+	var whitespaces = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+	var whitespace = '[' + whitespaces + ']';
+	var ltrim = RegExp('^' + whitespace + whitespace + '*');
+	var rtrim = RegExp(whitespace + whitespace + '*$');
+
+	// `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
+	var createMethod$2 = function (TYPE) {
+	  return function ($this) {
+	    var string = String(requireObjectCoercible($this));
+	    if (TYPE & 1) string = string.replace(ltrim, '');
+	    if (TYPE & 2) string = string.replace(rtrim, '');
+	    return string;
+	  };
+	};
+
+	var stringTrim = {
+	  // `String.prototype.{ trimLeft, trimStart }` methods
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.trimstart
+	  start: createMethod$2(1),
+	  // `String.prototype.{ trimRight, trimEnd }` methods
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.trimend
+	  end: createMethod$2(2),
+	  // `String.prototype.trim` method
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.trim
+	  trim: createMethod$2(3)
+	};
+
+	var getOwnPropertyNames = objectGetOwnPropertyNames.f;
+	var getOwnPropertyDescriptor$2 = objectGetOwnPropertyDescriptor.f;
+	var defineProperty = objectDefineProperty.f;
+	var trim = stringTrim.trim;
+
+	var NUMBER = 'Number';
+	var NativeNumber = global_1[NUMBER];
+	var NumberPrototype = NativeNumber.prototype;
+
+	// Opera ~12 has broken Object#toString
+	var BROKEN_CLASSOF = classofRaw(objectCreate(NumberPrototype)) == NUMBER;
+
+	// `ToNumber` abstract operation
+	// https://tc39.github.io/ecma262/#sec-tonumber
+	var toNumber = function (argument) {
+	  var it = toPrimitive(argument, false);
+	  var first, third, radix, maxCode, digits, length, index, code;
+	  if (typeof it == 'string' && it.length > 2) {
+	    it = trim(it);
+	    first = it.charCodeAt(0);
+	    if (first === 43 || first === 45) {
+	      third = it.charCodeAt(2);
+	      if (third === 88 || third === 120) return NaN; // Number('+0x1') should be NaN, old V8 fix
+	    } else if (first === 48) {
+	      switch (it.charCodeAt(1)) {
+	        case 66: case 98: radix = 2; maxCode = 49; break; // fast equal of /^0b[01]+$/i
+	        case 79: case 111: radix = 8; maxCode = 55; break; // fast equal of /^0o[0-7]+$/i
+	        default: return +it;
+	      }
+	      digits = it.slice(2);
+	      length = digits.length;
+	      for (index = 0; index < length; index++) {
+	        code = digits.charCodeAt(index);
+	        // parseInt parses a string to a first unavailable symbol
+	        // but ToNumber should return NaN if a string contains unavailable symbols
+	        if (code < 48 || code > maxCode) return NaN;
+	      } return parseInt(digits, radix);
+	    }
+	  } return +it;
+	};
+
+	// `Number` constructor
+	// https://tc39.github.io/ecma262/#sec-number-constructor
+	if (isForced_1(NUMBER, !NativeNumber(' 0o1') || !NativeNumber('0b1') || NativeNumber('+0x1'))) {
+	  var NumberWrapper = function Number(value) {
+	    var it = arguments.length < 1 ? 0 : value;
+	    var dummy = this;
+	    return dummy instanceof NumberWrapper
+	      // check on 1..constructor(foo) case
+	      && (BROKEN_CLASSOF ? fails(function () { NumberPrototype.valueOf.call(dummy); }) : classofRaw(dummy) != NUMBER)
+	        ? inheritIfRequired(new NativeNumber(toNumber(it)), dummy, NumberWrapper) : toNumber(it);
+	  };
+	  for (var keys$1 = descriptors ? getOwnPropertyNames(NativeNumber) : (
+	    // ES3:
+	    'MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' +
+	    // ES2015 (in case, if modules with ES2015 Number statics required before):
+	    'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' +
+	    'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger'
+	  ).split(','), j = 0, key; keys$1.length > j; j++) {
+	    if (has(NativeNumber, key = keys$1[j]) && !has(NumberWrapper, key)) {
+	      defineProperty(NumberWrapper, key, getOwnPropertyDescriptor$2(NativeNumber, key));
+	    }
+	  }
+	  NumberWrapper.prototype = NumberPrototype;
+	  NumberPrototype.constructor = NumberWrapper;
+	  redefine(global_1, NUMBER, NumberWrapper);
+	}
+
+	// `thisNumberValue` abstract operation
+	// https://tc39.github.io/ecma262/#sec-thisnumbervalue
+	var thisNumberValue = function (value) {
+	  if (typeof value != 'number' && classofRaw(value) != 'Number') {
+	    throw TypeError('Incorrect invocation');
+	  }
+	  return +value;
+	};
+
+	// `String.prototype.repeat` method implementation
+	// https://tc39.github.io/ecma262/#sec-string.prototype.repeat
+	var stringRepeat = ''.repeat || function repeat(count) {
+	  var str = String(requireObjectCoercible(this));
+	  var result = '';
+	  var n = toInteger(count);
+	  if (n < 0 || n == Infinity) throw RangeError('Wrong number of repetitions');
+	  for (;n > 0; (n >>>= 1) && (str += str)) if (n & 1) result += str;
+	  return result;
+	};
+
+	var nativeToFixed = 1.0.toFixed;
+	var floor$1 = Math.floor;
+
+	var pow = function (x, n, acc) {
+	  return n === 0 ? acc : n % 2 === 1 ? pow(x, n - 1, acc * x) : pow(x * x, n / 2, acc);
+	};
+
+	var log = function (x) {
+	  var n = 0;
+	  var x2 = x;
+	  while (x2 >= 4096) {
+	    n += 12;
+	    x2 /= 4096;
+	  }
+	  while (x2 >= 2) {
+	    n += 1;
+	    x2 /= 2;
+	  } return n;
+	};
+
+	var FORCED$1 = nativeToFixed && (
+	  0.00008.toFixed(3) !== '0.000' ||
+	  0.9.toFixed(0) !== '1' ||
+	  1.255.toFixed(2) !== '1.25' ||
+	  1000000000000000128.0.toFixed(0) !== '1000000000000000128'
+	) || !fails(function () {
+	  // V8 ~ Android 4.3-
+	  nativeToFixed.call({});
+	});
+
+	// `Number.prototype.toFixed` method
+	// https://tc39.github.io/ecma262/#sec-number.prototype.tofixed
+	_export({ target: 'Number', proto: true, forced: FORCED$1 }, {
+	  // eslint-disable-next-line max-statements
+	  toFixed: function toFixed(fractionDigits) {
+	    var number = thisNumberValue(this);
+	    var fractDigits = toInteger(fractionDigits);
+	    var data = [0, 0, 0, 0, 0, 0];
+	    var sign = '';
+	    var result = '0';
+	    var e, z, j, k;
+
+	    var multiply = function (n, c) {
+	      var index = -1;
+	      var c2 = c;
+	      while (++index < 6) {
+	        c2 += n * data[index];
+	        data[index] = c2 % 1e7;
+	        c2 = floor$1(c2 / 1e7);
+	      }
+	    };
+
+	    var divide = function (n) {
+	      var index = 6;
+	      var c = 0;
+	      while (--index >= 0) {
+	        c += data[index];
+	        data[index] = floor$1(c / n);
+	        c = (c % n) * 1e7;
+	      }
+	    };
+
+	    var dataToString = function () {
+	      var index = 6;
+	      var s = '';
+	      while (--index >= 0) {
+	        if (s !== '' || index === 0 || data[index] !== 0) {
+	          var t = String(data[index]);
+	          s = s === '' ? t : s + stringRepeat.call('0', 7 - t.length) + t;
+	        }
+	      } return s;
+	    };
+
+	    if (fractDigits < 0 || fractDigits > 20) throw RangeError('Incorrect fraction digits');
+	    // eslint-disable-next-line no-self-compare
+	    if (number != number) return 'NaN';
+	    if (number <= -1e21 || number >= 1e21) return String(number);
+	    if (number < 0) {
+	      sign = '-';
+	      number = -number;
+	    }
+	    if (number > 1e-21) {
+	      e = log(number * pow(2, 69, 1)) - 69;
+	      z = e < 0 ? number * pow(2, -e, 1) : number / pow(2, e, 1);
+	      z *= 0x10000000000000;
+	      e = 52 - e;
+	      if (e > 0) {
+	        multiply(0, z);
+	        j = fractDigits;
+	        while (j >= 7) {
+	          multiply(1e7, 0);
+	          j -= 7;
+	        }
+	        multiply(pow(10, j, 1), 0);
+	        j = e - 1;
+	        while (j >= 23) {
+	          divide(1 << 23);
+	          j -= 23;
+	        }
+	        divide(1 << j);
+	        multiply(1, 1);
+	        divide(2);
+	        result = dataToString();
+	      } else {
+	        multiply(0, z);
+	        multiply(1 << -e, 0);
+	        result = dataToString() + stringRepeat.call('0', fractDigits);
+	      }
+	    }
+	    if (fractDigits > 0) {
+	      k = result.length;
+	      result = sign + (k <= fractDigits
+	        ? '0.' + stringRepeat.call('0', fractDigits - k) + result
+	        : result.slice(0, k - fractDigits) + '.' + result.slice(k - fractDigits));
+	    } else {
+	      result = sign + result;
+	    } return result;
+	  }
+	});
+
+	var trim$1 = stringTrim.trim;
+
+
+	var nativeParseFloat = global_1.parseFloat;
+	var FORCED$2 = 1 / nativeParseFloat(whitespaces + '-0') !== -Infinity;
+
+	// `parseFloat` method
+	// https://tc39.github.io/ecma262/#sec-parsefloat-string
+	var _parseFloat = FORCED$2 ? function parseFloat(string) {
+	  var trimmedString = trim$1(String(string));
+	  var result = nativeParseFloat(trimmedString);
+	  return result === 0 && trimmedString.charAt(0) == '-' ? -0 : result;
+	} : nativeParseFloat;
+
+	// `parseFloat` method
+	// https://tc39.github.io/ecma262/#sec-parsefloat-string
+	_export({ global: true, forced: parseFloat != _parseFloat }, {
+	  parseFloat: _parseFloat
+	});
+
+	// `RegExp.prototype.flags` getter implementation
+	// https://tc39.github.io/ecma262/#sec-get-regexp.prototype.flags
+	var regexpFlags = function () {
+	  var that = anObject(this);
+	  var result = '';
+	  if (that.global) result += 'g';
+	  if (that.ignoreCase) result += 'i';
+	  if (that.multiline) result += 'm';
+	  if (that.dotAll) result += 's';
+	  if (that.unicode) result += 'u';
+	  if (that.sticky) result += 'y';
+	  return result;
+	};
+
+	var nativeExec = RegExp.prototype.exec;
+	// This always refers to the native implementation, because the
+	// String#replace polyfill uses ./fix-regexp-well-known-symbol-logic.js,
+	// which loads this file before patching the method.
+	var nativeReplace = String.prototype.replace;
+
+	var patchedExec = nativeExec;
+
+	var UPDATES_LAST_INDEX_WRONG = (function () {
+	  var re1 = /a/;
+	  var re2 = /b*/g;
+	  nativeExec.call(re1, 'a');
+	  nativeExec.call(re2, 'a');
+	  return re1.lastIndex !== 0 || re2.lastIndex !== 0;
+	})();
+
+	// nonparticipating capturing group, copied from es5-shim's String#split patch.
+	var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
+
+	var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED;
+
+	if (PATCH) {
+	  patchedExec = function exec(str) {
+	    var re = this;
+	    var lastIndex, reCopy, match, i;
+
+	    if (NPCG_INCLUDED) {
+	      reCopy = new RegExp('^' + re.source + '$(?!\\s)', regexpFlags.call(re));
+	    }
+	    if (UPDATES_LAST_INDEX_WRONG) lastIndex = re.lastIndex;
+
+	    match = nativeExec.call(re, str);
+
+	    if (UPDATES_LAST_INDEX_WRONG && match) {
+	      re.lastIndex = re.global ? match.index + match[0].length : lastIndex;
+	    }
+	    if (NPCG_INCLUDED && match && match.length > 1) {
+	      // Fix browsers whose `exec` methods don't consistently return `undefined`
+	      // for NPCG, like IE8. NOTE: This doesn' work for /(.?)?/
+	      nativeReplace.call(match[0], reCopy, function () {
+	        for (i = 1; i < arguments.length - 2; i++) {
+	          if (arguments[i] === undefined) match[i] = undefined;
+	        }
+	      });
+	    }
+
+	    return match;
+	  };
+	}
+
+	var regexpExec = patchedExec;
+
+	_export({ target: 'RegExp', proto: true, forced: /./.exec !== regexpExec }, {
+	  exec: regexpExec
+	});
+
+	// `String.prototype.repeat` method
+	// https://tc39.github.io/ecma262/#sec-string.prototype.repeat
+	_export({ target: 'String', proto: true }, {
+	  repeat: stringRepeat
+	});
+
+	var SPECIES$3 = wellKnownSymbol('species');
+
+	var REPLACE_SUPPORTS_NAMED_GROUPS = !fails(function () {
+	  // #replace needs built-in support for named groups.
+	  // #match works fine because it just return the exec results, even if it has
+	  // a "grops" property.
+	  var re = /./;
+	  re.exec = function () {
+	    var result = [];
+	    result.groups = { a: '7' };
+	    return result;
+	  };
+	  return ''.replace(re, '$<a>') !== '7';
+	});
+
+	// Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
+	// Weex JS has frozen built-in prototypes, so use try / catch wrapper
+	var SPLIT_WORKS_WITH_OVERWRITTEN_EXEC = !fails(function () {
+	  var re = /(?:)/;
+	  var originalExec = re.exec;
+	  re.exec = function () { return originalExec.apply(this, arguments); };
+	  var result = 'ab'.split(re);
+	  return result.length !== 2 || result[0] !== 'a' || result[1] !== 'b';
+	});
+
+	var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
+	  var SYMBOL = wellKnownSymbol(KEY);
+
+	  var DELEGATES_TO_SYMBOL = !fails(function () {
+	    // String methods call symbol-named RegEp methods
+	    var O = {};
+	    O[SYMBOL] = function () { return 7; };
+	    return ''[KEY](O) != 7;
+	  });
+
+	  var DELEGATES_TO_EXEC = DELEGATES_TO_SYMBOL && !fails(function () {
+	    // Symbol-named RegExp methods call .exec
+	    var execCalled = false;
+	    var re = /a/;
+	    re.exec = function () { execCalled = true; return null; };
+
+	    if (KEY === 'split') {
+	      // RegExp[@@split] doesn't call the regex's exec method, but first creates
+	      // a new one. We need to return the patched regex when creating the new one.
+	      re.constructor = {};
+	      re.constructor[SPECIES$3] = function () { return re; };
+	    }
+
+	    re[SYMBOL]('');
+	    return !execCalled;
+	  });
+
+	  if (
+	    !DELEGATES_TO_SYMBOL ||
+	    !DELEGATES_TO_EXEC ||
+	    (KEY === 'replace' && !REPLACE_SUPPORTS_NAMED_GROUPS) ||
+	    (KEY === 'split' && !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC)
+	  ) {
+	    var nativeRegExpMethod = /./[SYMBOL];
+	    var methods = exec(SYMBOL, ''[KEY], function (nativeMethod, regexp, str, arg2, forceStringMethod) {
+	      if (regexp.exec === regexpExec) {
+	        if (DELEGATES_TO_SYMBOL && !forceStringMethod) {
+	          // The native String method already delegates to @@method (this
+	          // polyfilled function), leasing to infinite recursion.
+	          // We avoid it by directly calling the native @@method method.
+	          return { done: true, value: nativeRegExpMethod.call(regexp, str, arg2) };
+	        }
+	        return { done: true, value: nativeMethod.call(str, regexp, arg2) };
+	      }
+	      return { done: false };
 	    });
+	    var stringMethod = methods[0];
+	    var regexMethod = methods[1];
+
+	    redefine(String.prototype, KEY, stringMethod);
+	    redefine(RegExp.prototype, SYMBOL, length == 2
+	      // 21.2.5.8 RegExp.prototype[@@replace](string, replaceValue)
+	      // 21.2.5.11 RegExp.prototype[@@split](string, limit)
+	      ? function (string, arg) { return regexMethod.call(string, this, arg); }
+	      // 21.2.5.6 RegExp.prototype[@@match](string)
+	      // 21.2.5.9 RegExp.prototype[@@search](string)
+	      : function (string) { return regexMethod.call(string, this); }
+	    );
+	    if (sham) hide(RegExp.prototype[SYMBOL], 'sham', true);
 	  }
 	};
-	var noop = fn.noop;
-	var loopFn = fn.loopFn;
 
+	// `String.prototype.{ codePointAt, at }` methods implementation
+	var createMethod$3 = function (CONVERT_TO_STRING) {
+	  return function ($this, pos) {
+	    var S = String(requireObjectCoercible($this));
+	    var position = toInteger(pos);
+	    var size = S.length;
+	    var first, second;
+	    if (position < 0 || position >= size) return CONVERT_TO_STRING ? '' : undefined;
+	    first = S.charCodeAt(position);
+	    return first < 0xD800 || first > 0xDBFF || position + 1 === size
+	      || (second = S.charCodeAt(position + 1)) < 0xDC00 || second > 0xDFFF
+	        ? CONVERT_TO_STRING ? S.charAt(position) : first
+	        : CONVERT_TO_STRING ? S.slice(position, position + 2) : (first - 0xD800 << 10) + (second - 0xDC00) + 0x10000;
+	  };
+	};
+
+	var stringMultibyte = {
+	  // `String.prototype.codePointAt` method
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.codepointat
+	  codeAt: createMethod$3(false),
+	  // `String.prototype.at` method
+	  // https://github.com/mathiasbynens/String.prototype.at
+	  charAt: createMethod$3(true)
+	};
+
+	var charAt = stringMultibyte.charAt;
+
+	// `AdvanceStringIndex` abstract operation
+	// https://tc39.github.io/ecma262/#sec-advancestringindex
+	var advanceStringIndex = function (S, index, unicode) {
+	  return index + (unicode ? charAt(S, index).length : 1);
+	};
+
+	// `RegExpExec` abstract operation
+	// https://tc39.github.io/ecma262/#sec-regexpexec
+	var regexpExecAbstract = function (R, S) {
+	  var exec = R.exec;
+	  if (typeof exec === 'function') {
+	    var result = exec.call(R, S);
+	    if (typeof result !== 'object') {
+	      throw TypeError('RegExp exec method returned something other than an Object or null');
+	    }
+	    return result;
+	  }
+
+	  if (classofRaw(R) !== 'RegExp') {
+	    throw TypeError('RegExp#exec called on incompatible receiver');
+	  }
+
+	  return regexpExec.call(R, S);
+	};
+
+	var max$2 = Math.max;
+	var min$2 = Math.min;
+	var floor$2 = Math.floor;
+	var SUBSTITUTION_SYMBOLS = /\$([$&'`]|\d\d?|<[^>]*>)/g;
+	var SUBSTITUTION_SYMBOLS_NO_NAMED = /\$([$&'`]|\d\d?)/g;
+
+	var maybeToString = function (it) {
+	  return it === undefined ? it : String(it);
+	};
+
+	// @@replace logic
+	fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative) {
+	  return [
+	    // `String.prototype.replace` method
+	    // https://tc39.github.io/ecma262/#sec-string.prototype.replace
+	    function replace(searchValue, replaceValue) {
+	      var O = requireObjectCoercible(this);
+	      var replacer = searchValue == undefined ? undefined : searchValue[REPLACE];
+	      return replacer !== undefined
+	        ? replacer.call(searchValue, O, replaceValue)
+	        : nativeReplace.call(String(O), searchValue, replaceValue);
+	    },
+	    // `RegExp.prototype[@@replace]` method
+	    // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@replace
+	    function (regexp, replaceValue) {
+	      var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
+	      if (res.done) return res.value;
+
+	      var rx = anObject(regexp);
+	      var S = String(this);
+
+	      var functionalReplace = typeof replaceValue === 'function';
+	      if (!functionalReplace) replaceValue = String(replaceValue);
+
+	      var global = rx.global;
+	      if (global) {
+	        var fullUnicode = rx.unicode;
+	        rx.lastIndex = 0;
+	      }
+	      var results = [];
+	      while (true) {
+	        var result = regexpExecAbstract(rx, S);
+	        if (result === null) break;
+
+	        results.push(result);
+	        if (!global) break;
+
+	        var matchStr = String(result[0]);
+	        if (matchStr === '') rx.lastIndex = advanceStringIndex(S, toLength(rx.lastIndex), fullUnicode);
+	      }
+
+	      var accumulatedResult = '';
+	      var nextSourcePosition = 0;
+	      for (var i = 0; i < results.length; i++) {
+	        result = results[i];
+
+	        var matched = String(result[0]);
+	        var position = max$2(min$2(toInteger(result.index), S.length), 0);
+	        var captures = [];
+	        // NOTE: This is equivalent to
+	        //   captures = result.slice(1).map(maybeToString)
+	        // but for some reason `nativeSlice.call(result, 1, result.length)` (called in
+	        // the slice polyfill when slicing native arrays) "doesn't work" in safari 9 and
+	        // causes a crash (https://pastebin.com/N21QzeQA) when trying to debug it.
+	        for (var j = 1; j < result.length; j++) captures.push(maybeToString(result[j]));
+	        var namedCaptures = result.groups;
+	        if (functionalReplace) {
+	          var replacerArgs = [matched].concat(captures, position, S);
+	          if (namedCaptures !== undefined) replacerArgs.push(namedCaptures);
+	          var replacement = String(replaceValue.apply(undefined, replacerArgs));
+	        } else {
+	          replacement = getSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+	        }
+	        if (position >= nextSourcePosition) {
+	          accumulatedResult += S.slice(nextSourcePosition, position) + replacement;
+	          nextSourcePosition = position + matched.length;
+	        }
+	      }
+	      return accumulatedResult + S.slice(nextSourcePosition);
+	    }
+	  ];
+
+	  // https://tc39.github.io/ecma262/#sec-getsubstitution
+	  function getSubstitution(matched, str, position, captures, namedCaptures, replacement) {
+	    var tailPos = position + matched.length;
+	    var m = captures.length;
+	    var symbols = SUBSTITUTION_SYMBOLS_NO_NAMED;
+	    if (namedCaptures !== undefined) {
+	      namedCaptures = toObject(namedCaptures);
+	      symbols = SUBSTITUTION_SYMBOLS;
+	    }
+	    return nativeReplace.call(replacement, symbols, function (match, ch) {
+	      var capture;
+	      switch (ch.charAt(0)) {
+	        case '$': return '$';
+	        case '&': return matched;
+	        case '`': return str.slice(0, position);
+	        case "'": return str.slice(tailPos);
+	        case '<':
+	          capture = namedCaptures[ch.slice(1, -1)];
+	          break;
+	        default: // \d\d?
+	          var n = +ch;
+	          if (n === 0) return match;
+	          if (n > m) {
+	            var f = floor$2(n / 10);
+	            if (f === 0) return match;
+	            if (f <= m) return captures[f - 1] === undefined ? ch.charAt(1) : captures[f - 1] + ch.charAt(1);
+	            return match;
+	          }
+	          capture = captures[n - 1];
+	      }
+	      return capture === undefined ? '' : capture;
+	    });
+	  }
+	});
+
+	var SPECIES$4 = wellKnownSymbol('species');
+
+	// `SpeciesConstructor` abstract operation
+	// https://tc39.github.io/ecma262/#sec-speciesconstructor
+	var speciesConstructor = function (O, defaultConstructor) {
+	  var C = anObject(O).constructor;
+	  var S;
+	  return C === undefined || (S = anObject(C)[SPECIES$4]) == undefined ? defaultConstructor : aFunction$1(S);
+	};
+
+	var arrayPush = [].push;
+	var min$3 = Math.min;
+	var MAX_UINT32 = 0xFFFFFFFF;
+
+	// babel-minify transpiles RegExp('x', 'y') -> /x/y and it causes SyntaxError
+	var SUPPORTS_Y = !fails(function () { return !RegExp(MAX_UINT32, 'y'); });
+
+	// @@split logic
+	fixRegexpWellKnownSymbolLogic('split', 2, function (SPLIT, nativeSplit, maybeCallNative) {
+	  var internalSplit;
+	  if (
+	    'abbc'.split(/(b)*/)[1] == 'c' ||
+	    'test'.split(/(?:)/, -1).length != 4 ||
+	    'ab'.split(/(?:ab)*/).length != 2 ||
+	    '.'.split(/(.?)(.?)/).length != 4 ||
+	    '.'.split(/()()/).length > 1 ||
+	    ''.split(/.?/).length
+	  ) {
+	    // based on es5-shim implementation, need to rework it
+	    internalSplit = function (separator, limit) {
+	      var string = String(requireObjectCoercible(this));
+	      var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
+	      if (lim === 0) return [];
+	      if (separator === undefined) return [string];
+	      // If `separator` is not a regex, use native split
+	      if (!isRegexp(separator)) {
+	        return nativeSplit.call(string, separator, lim);
+	      }
+	      var output = [];
+	      var flags = (separator.ignoreCase ? 'i' : '') +
+	                  (separator.multiline ? 'm' : '') +
+	                  (separator.unicode ? 'u' : '') +
+	                  (separator.sticky ? 'y' : '');
+	      var lastLastIndex = 0;
+	      // Make `global` and avoid `lastIndex` issues by working with a copy
+	      var separatorCopy = new RegExp(separator.source, flags + 'g');
+	      var match, lastIndex, lastLength;
+	      while (match = regexpExec.call(separatorCopy, string)) {
+	        lastIndex = separatorCopy.lastIndex;
+	        if (lastIndex > lastLastIndex) {
+	          output.push(string.slice(lastLastIndex, match.index));
+	          if (match.length > 1 && match.index < string.length) arrayPush.apply(output, match.slice(1));
+	          lastLength = match[0].length;
+	          lastLastIndex = lastIndex;
+	          if (output.length >= lim) break;
+	        }
+	        if (separatorCopy.lastIndex === match.index) separatorCopy.lastIndex++; // Avoid an infinite loop
+	      }
+	      if (lastLastIndex === string.length) {
+	        if (lastLength || !separatorCopy.test('')) output.push('');
+	      } else output.push(string.slice(lastLastIndex));
+	      return output.length > lim ? output.slice(0, lim) : output;
+	    };
+	  // Chakra, V8
+	  } else if ('0'.split(undefined, 0).length) {
+	    internalSplit = function (separator, limit) {
+	      return separator === undefined && limit === 0 ? [] : nativeSplit.call(this, separator, limit);
+	    };
+	  } else internalSplit = nativeSplit;
+
+	  return [
+	    // `String.prototype.split` method
+	    // https://tc39.github.io/ecma262/#sec-string.prototype.split
+	    function split(separator, limit) {
+	      var O = requireObjectCoercible(this);
+	      var splitter = separator == undefined ? undefined : separator[SPLIT];
+	      return splitter !== undefined
+	        ? splitter.call(separator, O, limit)
+	        : internalSplit.call(String(O), separator, limit);
+	    },
+	    // `RegExp.prototype[@@split]` method
+	    // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@split
+	    //
+	    // NOTE: This cannot be properly polyfilled in engines that don't support
+	    // the 'y' flag.
+	    function (regexp, limit) {
+	      var res = maybeCallNative(internalSplit, regexp, this, limit, internalSplit !== nativeSplit);
+	      if (res.done) return res.value;
+
+	      var rx = anObject(regexp);
+	      var S = String(this);
+	      var C = speciesConstructor(rx, RegExp);
+
+	      var unicodeMatching = rx.unicode;
+	      var flags = (rx.ignoreCase ? 'i' : '') +
+	                  (rx.multiline ? 'm' : '') +
+	                  (rx.unicode ? 'u' : '') +
+	                  (SUPPORTS_Y ? 'y' : 'g');
+
+	      // ^(? + rx + ) is needed, in combination with some S slicing, to
+	      // simulate the 'y' flag.
+	      var splitter = new C(SUPPORTS_Y ? rx : '^(?:' + rx.source + ')', flags);
+	      var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
+	      if (lim === 0) return [];
+	      if (S.length === 0) return regexpExecAbstract(splitter, S) === null ? [S] : [];
+	      var p = 0;
+	      var q = 0;
+	      var A = [];
+	      while (q < S.length) {
+	        splitter.lastIndex = SUPPORTS_Y ? q : 0;
+	        var z = regexpExecAbstract(splitter, SUPPORTS_Y ? S : S.slice(q));
+	        var e;
+	        if (
+	          z === null ||
+	          (e = min$3(toLength(splitter.lastIndex + (SUPPORTS_Y ? 0 : q)), S.length)) === p
+	        ) {
+	          q = advanceStringIndex(S, q, unicodeMatching);
+	        } else {
+	          A.push(S.slice(p, q));
+	          if (A.length === lim) return A;
+	          for (var i = 1; i <= z.length - 1; i++) {
+	            A.push(z[i]);
+	            if (A.length === lim) return A;
+	          }
+	          q = p = e;
+	        }
+	      }
+	      A.push(S.slice(p));
+	      return A;
+	    }
+	  ];
+	}, !SUPPORTS_Y);
+
+	/**
+	 * 检测数字或字符串是否可转为安全数字
+	 * @param {number} number 检测的数字
+	 * @returns {boolean} 检测结果
+	 */
+	function isSafeNumber(number) {
+	  return !isNaN(parseFloat(number)) && isFinite(number);
+	}
+	/**
+	 * 数字格式化
+	 * @param {number} number 要格式化的数字
+	 * @param {object} [options] 格式化参数
+	 * @param {number} [options.decimals = 0] 小数位数
+	 * @param {string} [options.decimal = '.'] 整数与小数分隔符
+	 * @param {string} [options.separator = ','] 千分位分隔符
+	 * @param {string} [options.roundMethod = 'ceil'] 取整方式
+	 * @returns {string} 格式化结果
+	 */
+
+	function formatNumber(number) {
+	  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+	      _ref$decimals = _ref.decimals,
+	      decimals = _ref$decimals === void 0 ? 0 : _ref$decimals,
+	      _ref$decimal = _ref.decimal,
+	      decimal = _ref$decimal === void 0 ? '.' : _ref$decimal,
+	      _ref$separator = _ref.separator,
+	      separator = _ref$separator === void 0 ? ',' : _ref$separator,
+	      _ref$roundMethod = _ref.roundMethod,
+	      roundMethod = _ref$roundMethod === void 0 ? 'ceil' : _ref$roundMethod;
+
+	  if (!isSafeNumber(number)) return 0;
+	  number = Number(number);
+
+	  var toFixedFix = function toFixedFix(x, y) {
+	    var k = Math.pow(10, decimals);
+	    return "".concat((Math[roundMethod](x * k) / k).toFixed(y));
+	  };
+
+	  var s = (decimals ? toFixedFix(number, decimals) : "".concat(Math.round(number))).split(decimal);
+
+	  if (s[0].length > 3) {
+	    s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, separator);
+	  }
+
+	  if (typeof s[1] === 'string' && s[1].length < decimals) {
+	    s[1] = "".concat('0'.repeat(decimals)).concat(s[1]).slice(-decimals);
+	  }
+
+	  return s.join(decimal);
+	}
+
+	exports.formatNumber = formatNumber;
 	exports.isAndroid = isAndroid;
 	exports.isBrowser = isBrowser;
 	exports.isIOS = isIOS;
+	exports.isSafeNumber = isSafeNumber;
 	exports.isWechat = isWechat;
 	exports.loopFn = loopFn;
 	exports.noop = noop;
