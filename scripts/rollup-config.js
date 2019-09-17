@@ -26,7 +26,7 @@ module.exports = [
     output: {
       file: pathDist(output),
       format,
-      name: 'Goy',
+      name: 'GoyUtils',
       banner,
     },
 
@@ -45,24 +45,31 @@ module.exports = [
       json(),
 
       ...(minify
-        ? [terser({
-          output: {
-            comments: /^!/,
-          },
-        })]
+        ? [
+          terser({
+            output: {
+              comments: /^!/,
+            },
+          }),
+        ]
         : []),
 
       ...(format === 'umd'
-        ? [babel({
-          babelrc: false,
-          presets: [
-            ['@babel/preset-env', {
-              useBuiltIns: 'usage',
-              corejs: 3,
-            }],
-          ],
-          exclude: 'node_modules/**',
-        })]
+        ? [
+          babel({
+            babelrc: false,
+            presets: [
+              [
+                '@babel/preset-env',
+                {
+                  useBuiltIns: 'usage',
+                  corejs: 3,
+                },
+              ],
+            ],
+            exclude: 'node_modules/**',
+          }),
+        ]
         : []),
     ],
   }

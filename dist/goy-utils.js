@@ -10,7 +10,7 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(global = global || self, factory(global.Goy = {}));
+	(global = global || self, factory(global.GoyUtils = {}));
 }(this, function (exports) { 'use strict';
 
 	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -1776,7 +1776,7 @@
 	 * @param {number} [options.decimals = 0] 小数位数
 	 * @param {string} [options.decimal = '.'] 整数与小数分隔符
 	 * @param {string} [options.separator = ','] 千分位分隔符
-	 * @param {string} [options.roundMethod = 'ceil'] 取整方式
+	 * @param {string} [options.roundMethod = 'floor'] 取整方式
 	 * @returns {string} 格式化结果
 	 */
 
@@ -1789,7 +1789,7 @@
 	      _ref$separator = _ref.separator,
 	      separator = _ref$separator === void 0 ? ',' : _ref$separator,
 	      _ref$roundMethod = _ref.roundMethod,
-	      roundMethod = _ref$roundMethod === void 0 ? 'ceil' : _ref$roundMethod;
+	      roundMethod = _ref$roundMethod === void 0 ? 'floor' : _ref$roundMethod;
 
 	  if (!isSafeNumber(number)) return 0;
 	  number = Number(number);
@@ -1799,7 +1799,7 @@
 	    return "".concat((Math[roundMethod](x * k) / k).toFixed(y));
 	  };
 
-	  var s = (decimals ? toFixedFix(number, decimals) : "".concat(Math.round(number))).split(decimal);
+	  var s = (decimals ? toFixedFix(number, decimals) : "".concat(Math[roundMethod](number))).split(decimal);
 
 	  if (s[0].length > 3) {
 	    s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, separator);
@@ -1812,7 +1812,147 @@
 	  return s.join(decimal);
 	}
 
+	var DatePrototype = Date.prototype;
+	var INVALID_DATE = 'Invalid Date';
+	var TO_STRING = 'toString';
+	var nativeDateToString = DatePrototype[TO_STRING];
+	var getTime = DatePrototype.getTime;
+
+	// `Date.prototype.toString` method
+	// https://tc39.github.io/ecma262/#sec-date.prototype.tostring
+	if (new Date(NaN) + '' != INVALID_DATE) {
+	  redefine(DatePrototype, TO_STRING, function toString() {
+	    var value = getTime.call(this);
+	    // eslint-disable-next-line no-self-compare
+	    return value === value ? nativeDateToString.call(this) : INVALID_DATE;
+	  });
+	}
+
+	var SPECIES$5 = wellKnownSymbol('species');
+
+	var setSpecies = function (CONSTRUCTOR_NAME) {
+	  var Constructor = getBuiltIn(CONSTRUCTOR_NAME);
+	  var defineProperty = objectDefineProperty.f;
+
+	  if (descriptors && Constructor && !Constructor[SPECIES$5]) {
+	    defineProperty(Constructor, SPECIES$5, {
+	      configurable: true,
+	      get: function () { return this; }
+	    });
+	  }
+	};
+
+	var defineProperty$1 = objectDefineProperty.f;
+	var getOwnPropertyNames$1 = objectGetOwnPropertyNames.f;
+
+
+
+
+
+
+
+	var MATCH$2 = wellKnownSymbol('match');
+	var NativeRegExp = global_1.RegExp;
+	var RegExpPrototype = NativeRegExp.prototype;
+	var re1 = /a/g;
+	var re2 = /a/g;
+
+	// "new" should create a new object, old webkit bug
+	var CORRECT_NEW = new NativeRegExp(re1) !== re1;
+
+	var FORCED$3 = descriptors && isForced_1('RegExp', (!CORRECT_NEW || fails(function () {
+	  re2[MATCH$2] = false;
+	  // RegExp constructor can alter flags and IsRegExp works correct with @@match
+	  return NativeRegExp(re1) != re1 || NativeRegExp(re2) == re2 || NativeRegExp(re1, 'i') != '/a/i';
+	})));
+
+	// `RegExp` constructor
+	// https://tc39.github.io/ecma262/#sec-regexp-constructor
+	if (FORCED$3) {
+	  var RegExpWrapper = function RegExp(pattern, flags) {
+	    var thisIsRegExp = this instanceof RegExpWrapper;
+	    var patternIsRegExp = isRegexp(pattern);
+	    var flagsAreUndefined = flags === undefined;
+	    return !thisIsRegExp && patternIsRegExp && pattern.constructor === RegExpWrapper && flagsAreUndefined ? pattern
+	      : inheritIfRequired(CORRECT_NEW
+	        ? new NativeRegExp(patternIsRegExp && !flagsAreUndefined ? pattern.source : pattern, flags)
+	        : NativeRegExp((patternIsRegExp = pattern instanceof RegExpWrapper)
+	          ? pattern.source
+	          : pattern, patternIsRegExp && flagsAreUndefined ? regexpFlags.call(pattern) : flags)
+	      , thisIsRegExp ? this : RegExpPrototype, RegExpWrapper);
+	  };
+	  var proxy = function (key) {
+	    key in RegExpWrapper || defineProperty$1(RegExpWrapper, key, {
+	      configurable: true,
+	      get: function () { return NativeRegExp[key]; },
+	      set: function (it) { NativeRegExp[key] = it; }
+	    });
+	  };
+	  var keys$2 = getOwnPropertyNames$1(NativeRegExp);
+	  var index = 0;
+	  while (keys$2.length > index) proxy(keys$2[index++]);
+	  RegExpPrototype.constructor = RegExpWrapper;
+	  RegExpWrapper.prototype = RegExpPrototype;
+	  redefine(global_1, 'RegExp', RegExpWrapper);
+	}
+
+	// https://tc39.github.io/ecma262/#sec-get-regexp-@@species
+	setSpecies('RegExp');
+
+	var TO_STRING$1 = 'toString';
+	var RegExpPrototype$1 = RegExp.prototype;
+	var nativeToString = RegExpPrototype$1[TO_STRING$1];
+
+	var NOT_GENERIC = fails(function () { return nativeToString.call({ source: 'a', flags: 'b' }) != '/a/b'; });
+	// FF44- RegExp#toString has a wrong name
+	var INCORRECT_NAME = nativeToString.name != TO_STRING$1;
+
+	// `RegExp.prototype.toString` method
+	// https://tc39.github.io/ecma262/#sec-regexp.prototype.tostring
+	if (NOT_GENERIC || INCORRECT_NAME) {
+	  redefine(RegExp.prototype, TO_STRING$1, function toString() {
+	    var R = anObject(this);
+	    var p = String(R.source);
+	    var rf = R.flags;
+	    var f = String(rf === undefined && R instanceof RegExp && !('flags' in RegExpPrototype$1) ? regexpFlags.call(R) : rf);
+	    return '/' + p + '/' + f;
+	  }, { unsafe: true });
+	}
+
+	/**
+	 * 格式化时间
+	 * @param {string} value 时间
+	 * @param {string} [fmt = 'yyyy-MM-dd hh:mm:ss'] 格式
+	 * @returns {string} 格式化后的时间字符串
+	 */
+	function formatTime(value) {
+	  var fmt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'yyyy-MM-dd hh:mm:ss';
+	  var time = new Date(value);
+	  var obj = {
+	    'M+': time.getMonth() + 1,
+	    'd+': time.getDate(),
+	    'h+': time.getHours(),
+	    'm+': time.getMinutes(),
+	    's+': time.getSeconds(),
+	    'q+': ~~((time.getMonth() + 3) / 3),
+	    S: time.getMilliseconds()
+	  };
+
+	  if (/(y+)/.test(fmt)) {
+	    fmt = fmt.replace(RegExp.$1, (time.getFullYear() + '').substr(4 - RegExp.$1.length));
+	  }
+
+	  for (var k in obj) {
+	    if (new RegExp("(".concat(k, ")")).test(fmt)) {
+	      fmt = fmt.replace(RegExp.$1, RegExp.$1.length === 1 ? obj[k] : ('00' + obj[k]).substr(('' + obj[k]).length));
+	    }
+	  }
+
+	  return fmt;
+	}
+
 	exports.formatNumber = formatNumber;
+	exports.formatTime = formatTime;
 	exports.isAndroid = isAndroid;
 	exports.isBrowser = isBrowser;
 	exports.isIOS = isIOS;

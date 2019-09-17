@@ -46,13 +46,14 @@ function isBrowser () {
   return (
     typeof window === 'object' &&
     typeof document === 'object' &&
-    document.nodeType === 9)
+    document.nodeType === 9
+  )
 }
 
 /**
  * 空函数
  */
-function noop () { }
+function noop () {}
 
 /**
  * @callback loopFnCallback
@@ -86,15 +87,13 @@ function isSafeNumber (number) {
  * @param {number} [options.decimals = 0] 小数位数
  * @param {string} [options.decimal = '.'] 整数与小数分隔符
  * @param {string} [options.separator = ','] 千分位分隔符
- * @param {string} [options.roundMethod = 'ceil'] 取整方式
+ * @param {string} [options.roundMethod = 'floor'] 取整方式
  * @returns {string} 格式化结果
  */
-function formatNumber (number, {
-  decimals = 0,
-  decimal = '.',
-  separator = ',',
-  roundMethod = 'ceil',
-} = {}) {
+function formatNumber (
+  number,
+  { decimals = 0, decimal = '.', separator = ',', roundMethod = 'floor' } = {}
+) {
   if (!isSafeNumber(number)) return 0
 
   number = Number(number);
@@ -104,7 +103,10 @@ function formatNumber (number, {
 
     return `${(Math[roundMethod](x * k) / k).toFixed(y)}`
   };
-  const s = (decimals ? toFixedFix(number, decimals) : `${Math.round(number)}`).split(decimal);
+  const s = (decimals
+    ? toFixedFix(number, decimals)
+    : `${Math[roundMethod](number)}`
+  ).split(decimal);
 
   if (s[0].length > 3) {
     s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, separator);
@@ -117,7 +119,39 @@ function formatNumber (number, {
   return s.join(decimal)
 }
 
+/**
+ * 格式化时间
+ * @param {string} value 时间
+ * @param {string} [fmt = 'yyyy-MM-dd hh:mm:ss'] 格式
+ * @returns {string} 格式化后的时间字符串
+ */
+function formatTime (value, fmt = 'yyyy-MM-dd hh:mm:ss') {
+  const time = new Date(value);
+  const obj = {
+    'M+': time.getMonth() + 1,
+    'd+': time.getDate(),
+    'h+': time.getHours(),
+    'm+': time.getMinutes(),
+    's+': time.getSeconds(),
+    'q+': ~~((time.getMonth() + 3) / 3),
+    S: time.getMilliseconds(),
+  };
+
+  if (/(y+)/.test(fmt)) {
+    fmt = fmt.replace(RegExp.$1, (time.getFullYear() + '').substr(4 - RegExp.$1.length));
+  }
+
+  for (const k in obj) {
+    if (new RegExp(`(${k})`).test(fmt)) {
+      fmt = fmt.replace(RegExp.$1, RegExp.$1.length === 1 ? obj[k] : ('00' + obj[k]).substr(('' + obj[k]).length));
+    }
+  }
+
+  return fmt
+}
+
 exports.formatNumber = formatNumber;
+exports.formatTime = formatTime;
 exports.isAndroid = isAndroid;
 exports.isBrowser = isBrowser;
 exports.isIOS = isIOS;
