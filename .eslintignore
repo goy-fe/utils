@@ -1,2 +1,10 @@
-dist
+# Enable lint dotfiles
+!.*
+node_modules/.*
+
 node_modules
+
+# Production
+/dist
+/docs
+/coverage
