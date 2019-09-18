@@ -174,13 +174,43 @@
     return fmt
   }
 
+  var RE_EXTERNAL_URL = /^(https?:|mailto:|tel:|[a-zA-Z]{4,}:)/i;
+
+  /**
+   * 检测URL是否为外部URL
+   * @param {string} url 要检测的URL
+   * @returns {boolean} 检测结果
+   */
+  function isExternalURL (url) {
+    return RE_EXTERNAL_URL.test(url)
+  }
+
+  /**
+   * 获取URL上的查询参数对象
+   * @param {string} url 要格式化的URL
+   * @returns {object} 格式化的参数对象，若无参数则为空对象
+   */
+  function getQueryParams (url) {
+    if ( url === void 0 ) url = '';
+
+    var search = url.split('?')[1];
+
+    if (!search) { return {} }
+
+    return JSON.parse(
+      '{"' + decodeURIComponent(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}'
+    )
+  }
+
   var VERSION = "0.0.1";
 
   exports.VERSION = VERSION;
   exports.formatNumber = formatNumber;
   exports.formatTime = formatTime;
+  exports.getQueryParams = getQueryParams;
   exports.isAndroid = isAndroid;
   exports.isBrowser = isBrowser;
+  exports.isExternalURL = isExternalURL;
   exports.isIOS = isIOS;
   exports.isSafeNumber = isSafeNumber;
   exports.isWechat = isWechat;
