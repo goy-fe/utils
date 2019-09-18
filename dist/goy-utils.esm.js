@@ -134,16 +134,26 @@ function formatTime (value, fmt = 'yyyy-MM-dd hh:mm:ss') {
   };
 
   if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(RegExp.$1, (time.getFullYear() + '').substr(4 - RegExp.$1.length));
+    fmt = fmt.replace(
+      RegExp.$1,
+      (time.getFullYear() + '').substr(4 - RegExp.$1.length)
+    );
   }
 
   for (const k in obj) {
     if (new RegExp(`(${k})`).test(fmt)) {
-      fmt = fmt.replace(RegExp.$1, RegExp.$1.length === 1 ? obj[k] : ('00' + obj[k]).substr(('' + obj[k]).length));
+      fmt = fmt.replace(
+        RegExp.$1,
+        RegExp.$1.length === 1
+          ? obj[k]
+          : ('00' + obj[k]).substr(('' + obj[k]).length)
+      );
     }
   }
 
   return fmt
 }
 
-export { formatNumber, formatTime, isAndroid, isBrowser, isIOS, isSafeNumber, isWechat, loopFn, noop };
+const VERSION = "0.0.1";
+
+export { VERSION, formatNumber, formatTime, isAndroid, isBrowser, isIOS, isSafeNumber, isWechat, loopFn, noop };

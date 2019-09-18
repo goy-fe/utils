@@ -1,8 +1,7 @@
 const replace = require('rollup-plugin-replace')
-const resolve = require('rollup-plugin-node-resolve')
+const node = require('rollup-plugin-node-resolve')
 const commonjs = require('rollup-plugin-commonjs')
-const json = require('rollup-plugin-json')
-const babel = require('rollup-plugin-babel')
+const buble = require('rollup-plugin-buble')
 const { terser } = require('rollup-plugin-terser')
 
 const {
@@ -13,13 +12,26 @@ const {
 } = require('./utils')
 
 module.exports = [
-  { output: 'goy-utils.js', format: 'umd' },
-  { output: 'goy-utils.min.js', format: 'umd' },
-  { output: 'goy-utils.cjs.js', format: 'cjs' },
-  { output: 'goy-utils.esm.js', format: 'es' },
+  {
+    output: 'goy-utils.js',
+    format: 'umd',
+    plugins: [buble()],
+  },
+  {
+    output: 'goy-utils.min.js',
+    format: 'umd',
+    plugins: [buble(), terser({ output: { comments: /^!/ } })],
+  },
+  {
+    output: 'goy-utils.cjs.js',
+    format: 'cjs',
+  },
+  {
+    output: 'goy-utils.esm.js',
+    format: 'es',
+  },
 ].map(opts => {
-  const { output, format } = opts
-  const minify = Boolean(/min\.js$/.test(output))
+  const { output, format, plugins = [] } = opts
   const config = {
     input: pathSrc('main.js'),
 
@@ -35,42 +47,11 @@ module.exports = [
         'process.env.VERSION': JSON.stringify(version),
       }),
 
-      resolve({
-        browser: true,
-        preferBuiltins: true,
-      }),
+      node(),
 
       commonjs(),
 
-      json(),
-
-      ...(minify
-        ? [
-          terser({
-            output: {
-              comments: /^!/,
-            },
-          }),
-        ]
-        : []),
-
-      ...(format === 'umd'
-        ? [
-          babel({
-            babelrc: false,
-            presets: [
-              [
-                '@babel/preset-env',
-                {
-                  useBuiltIns: 'usage',
-                  corejs: 3,
-                },
-              ],
-            ],
-            exclude: 'node_modules/**',
-          }),
-        ]
-        : []),
+      ...plugins,
     ],
   }
 
