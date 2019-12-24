@@ -1,4 +1,8 @@
 {
+  "eslint.enable": true,
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
   "[handlebars]": {
     "editor.formatOnSave": false
   }

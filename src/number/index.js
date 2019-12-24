@@ -19,7 +19,7 @@ export function isSafeNumber (number) {
  */
 export function formatNumber (
   number,
-  { decimals = 0, decimal = '.', separator = ',', roundMethod = 'floor' } = {}
+  { decimals = 0, decimal = '.', separator = ',', roundMethod = 'floor' } = {},
 ) {
   if (!isSafeNumber(number)) return 0
 

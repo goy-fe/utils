@@ -1,7 +1,7 @@
-const replace = require('rollup-plugin-replace')
-const node = require('rollup-plugin-node-resolve')
-const commonjs = require('rollup-plugin-commonjs')
-const buble = require('rollup-plugin-buble')
+const replace = require('@rollup/plugin-replace')
+const node = require('@rollup/plugin-node-resolve')
+const commonjs = require('@rollup/plugin-commonjs')
+const buble = require('@rollup/plugin-buble')
 const { terser } = require('rollup-plugin-terser')
 
 const {

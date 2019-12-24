@@ -11,7 +11,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = global || self, factory(global.GoyUtils = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
   /**
    * 检测是否为 IOS 环境
@@ -197,9 +197,10 @@
 
     if (!search) { return {} }
 
-    return JSON.parse(
-      '{"' + decodeURIComponent(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}'
-    )
+    return JSON.parse(("{\"\n    " + (decodeURIComponent(search)
+        .replace(/"/g, '\\"')
+        .replace(/&/g, '","')
+        .replace(/=/g, '":"')) + "\n    \"}"))
   }
 
   var VERSION = "0.0.1";
@@ -219,4 +220,4 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));
