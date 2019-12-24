@@ -22,14 +22,12 @@
     "build": "rollup --config scripts/rollup-config.js",
     "postbuild": "npm run build:docs",
     "build:docs": "jsdoc -c jsdoc.json",
-    "coverage": "jest --verbose --runInBand --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "new": "plop",
     "release": "standard-version",
     "pretest": "npm run lint:fix",
-    "test": "jest",
-    "posttest": "npm run coverage"
+    "test": "jest"
   },
   "husky": {
     "hooks": {
