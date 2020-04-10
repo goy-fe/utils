@@ -6,7 +6,7 @@ describe('Group Env', () => {
       isIOS(
         'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1',
       ),
-    ).toBe(true)
+    ).toBeTruthy()
   })
 
   test(`Should isAndroid('Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Mobile Safari/537.36') return true`, () => {
@@ -14,7 +14,7 @@ describe('Group Env', () => {
       isAndroid(
         'Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Mobile Safari/537.36',
       ),
-    ).toBe(true)
+    ).toBeTruthy()
   })
 
   test(`Should isWechat('Mozilla/5.0 (Linux; Android 4.4.4; HM NOTE 1LTEW Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36 MicroMessenger/6.0.0.54_r849063.501 NetType/WIFI') return true`, () => {
@@ -22,10 +22,10 @@ describe('Group Env', () => {
       isWechat(
         'Mozilla/5.0 (Linux; Android 4.4.4; HM NOTE 1LTEW Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/33.0.0.0 Mobile Safari/537.36 MicroMessenger/6.0.0.54_r849063.501 NetType/WIFI',
       ),
-    ).toBe(true)
+    ).toBeTruthy()
   })
 
   test(`Should isBrowser() return true`, () => {
-    expect(isBrowser()).toBe(true)
+    expect(isBrowser()).toBeTruthy()
   })
 })

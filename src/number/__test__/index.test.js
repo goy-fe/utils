@@ -2,7 +2,7 @@ import { isSafeNumber, formatNumber } from '..'
 
 describe('Group Number', () => {
   test(`Should 0 be a safe number`, () => {
-    expect(isSafeNumber(0)).toBe(true)
+    expect(isSafeNumber(0)).toBeTruthy()
   })
 
   test(`Should formatNumber(123456.789) return 123,456`, () => {

@@ -88,7 +88,7 @@ function isSafeNumber (number) {
  */
 function formatNumber (
   number,
-  { decimals = 0, decimal = '.', separator = ',', roundMethod = 'floor' } = {}
+  { decimals = 0, decimal = '.', separator = ',', roundMethod = 'floor' } = {},
 ) {
   if (!isSafeNumber(number)) return 0
 
@@ -136,7 +136,7 @@ function formatTime (value, fmt = 'yyyy-MM-dd hh:mm:ss') {
   if (/(y+)/.test(fmt)) {
     fmt = fmt.replace(
       RegExp.$1,
-      (time.getFullYear() + '').substr(4 - RegExp.$1.length)
+      (time.getFullYear() + '').substr(4 - RegExp.$1.length),
     );
   }
 
@@ -146,7 +146,7 @@ function formatTime (value, fmt = 'yyyy-MM-dd hh:mm:ss') {
         RegExp.$1,
         RegExp.$1.length === 1
           ? obj[k]
-          : ('00' + obj[k]).substr(('' + obj[k]).length)
+          : ('00' + obj[k]).substr(('' + obj[k]).length),
       );
     }
   }
@@ -175,12 +175,12 @@ function getQueryParams (url = '') {
 
   if (!search) return {}
 
-  return JSON.parse(`{"
-    ${decodeURIComponent(search)
-      .replace(/"/g, '\\"')
-      .replace(/&/g, '","')
-      .replace(/=/g, '":"')}
-    "}`)
+  const jsonData = decodeURIComponent(search)
+    .replace(/"/g, '\\"')
+    .replace(/&/g, '","')
+    .replace(/=/g, '":"');
+
+  return JSON.parse(`{"${jsonData}"}`)
 }
 
 const VERSION = "0.0.1";

@@ -197,10 +197,12 @@
 
     if (!search) { return {} }
 
-    return JSON.parse(("{\"\n    " + (decodeURIComponent(search)
-        .replace(/"/g, '\\"')
-        .replace(/&/g, '","')
-        .replace(/=/g, '":"')) + "\n    \"}"))
+    var jsonData = decodeURIComponent(search)
+      .replace(/"/g, '\\"')
+      .replace(/&/g, '","')
+      .replace(/=/g, '":"');
+
+    return JSON.parse(("{\"" + jsonData + "\"}"))
   }
 
   var VERSION = "0.0.1";
