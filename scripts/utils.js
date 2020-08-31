@@ -1,10 +1,10 @@
 const { resolve } = require('path')
-const pkg = require('../package.json')
+export const pkg = require('../package.json')
 
-const pathSrc = (...args) => resolve(__dirname, '../src', ...args)
-const pathDist = (...args) => resolve(__dirname, '../dist', ...args)
+export const pathSrc = (...args) => resolve(__dirname, '../src', ...args)
+export const pathDist = (...args) => resolve(__dirname, '../dist', ...args)
 
-const banner = `\
+export const banner = `\
 /*!
  * ${pkg.name} - ${pkg.description}
  *
@@ -14,10 +14,3 @@ const banner = `\
  * @copyright 2019 ${pkg.author}
  */
 `
-
-module.exports = {
-  pkg,
-  banner,
-  pathSrc,
-  pathDist,
-}

@@ -1,15 +1,10 @@
-const replace = require('@rollup/plugin-replace')
-const node = require('@rollup/plugin-node-resolve')
-const commonjs = require('@rollup/plugin-commonjs')
-const buble = require('@rollup/plugin-buble')
-const { terser } = require('rollup-plugin-terser')
+import replace from '@rollup/plugin-replace'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import buble from '@rollup/plugin-buble'
+import { terser } from 'rollup-plugin-terser'
 
-const {
-  pkg: { version },
-  banner,
-  pathSrc,
-  pathDist,
-} = require('./utils')
+import { pkg, banner, pathSrc, pathDist } from './utils'
 
 module.exports = [
   {
@@ -44,10 +39,10 @@ module.exports = [
 
     plugins: [
       replace({
-        'process.env.VERSION': JSON.stringify(version),
+        'process.env.VERSION': JSON.stringify(pkg.version),
       }),
 
-      node(),
+      nodeResolve(),
 
       commonjs(),
 
