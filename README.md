@@ -8,12 +8,12 @@ GoyFE team's utils
 
 ## status
 
-__WIP__
+**WIP**
 
 ## Scripts
 
-``` bash
-# build 
+```bash
+# build
 $ yarn build
 
 # build:docs
