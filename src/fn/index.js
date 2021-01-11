@@ -14,7 +14,7 @@ export function noop () {}
  * @param {loopFnCallback} cb 回调函数
  */
 export function loopFn (length, cb) {
-  Array.apply(null, { length }).map((_, idx) => {
+  Array.apply(null, { length }).foreach((_, idx) => {
     typeof cb === 'function' && cb(idx)
   })
 }

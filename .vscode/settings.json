@@ -5,5 +5,8 @@
   },
   "[handlebars]": {
     "editor.formatOnSave": false
-  }
+  },
+  "cSpell.words": [
+    "buble"
+  ]
 }

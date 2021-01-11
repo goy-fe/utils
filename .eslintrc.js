@@ -5,5 +5,5 @@ module.exports = {
     jest: true,
   },
 
-  extends: ['goy'],
+  extends: ['@ntnyq'],
 }
